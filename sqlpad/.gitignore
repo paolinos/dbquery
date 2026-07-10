@@ -1,0 +1,34 @@
+# Binaries
+sqlpad-server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace
+go.work
+go.work.sum
+
+# Data files
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Frontend build
+web/dist/
+web/node_modules/
+web/.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
