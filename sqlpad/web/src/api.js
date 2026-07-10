@@ -1,4 +1,5 @@
-const API_BASE = '/api'
+// HOST
+const API_BASE = 'http://localhost:8080/api'
 
 /**
  * Generic fetch wrapper with error handling.
