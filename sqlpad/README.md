@@ -1,4 +1,4 @@
-# SQLPad — Excel to SQLite Manager
+# DBQuery — Excel to SQLite Manager
 
 Import Excel spreadsheets into SQLite databases and run ad‑hoc SQL queries from a clean web interface. No accounts, no setup — just upload and query.
 
@@ -81,14 +81,14 @@ This produces a self-contained `build/` directory:
 
 ```
 build/
-  sqlpad-server    # Go binary
+  dbquery-server    # Go binary
   web/             # Frontend SPA (index.html, assets/)
 ```
 
 Run the production build:
 
 ```bash
-cd build && ./sqlpad-server
+cd build && ./dbquery-server
 ```
 
 Open **[http://localhost:8080](http://localhost:8080)**
@@ -171,7 +171,7 @@ Response:
 ## Project Layout
 
 ```
-sqlpad/
+dbquery/
 ├── cmd/server/              # Application entry point
 ├── internal/
 │   ├── core/models/         # Domain entities
@@ -181,7 +181,7 @@ sqlpad/
 │   ├── src/components/      # Vue components
 │   └── dist/                # Vite build output (intermediate)
 ├── build/                   # Production build output (gitignored)
-│   ├── sqlpad-server        # Go binary
+│   ├── dbquery-server        # Go binary
 │   └── web/                 # Frontend SPA for serving
 ├── data/                    # SQLite database storage
 ├── Makefile                 # Build & dev automation
@@ -201,7 +201,7 @@ sqlpad/
 | `make dev-be` | Start Go backend only (`:8080`, uses `air` if available) |
 | `make build` | Build FE and BE into `build/` |
 | `make build-fe` | Build frontend for production → `build/web/` |
-| `make build-be` | Build backend binary → `build/sqlpad-server` |
+| `make build-be` | Build backend binary → `build/dbquery-server` |
 | `make clean` | Remove all build artifacts |
 | `make help` | Show available targets |
 

@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/sqlpad/sqlpad/internal/server/api"
-	"github.com/sqlpad/sqlpad/internal/server/middleware"
+	"github.com/dbquery/dbquery/internal/server/api"
+	"github.com/dbquery/dbquery/internal/server/middleware"
 )
 
 // SetupRouter creates and configures the Gin router with all routes.
@@ -70,7 +70,7 @@ func serveFrontend(r *gin.Engine, frontendPath string) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SQLPad</title>
+  <title>DBQuery</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
@@ -81,7 +81,7 @@ func serveFrontend(r *gin.Engine, frontendPath string) {
 </head>
 <body>
   <div class="container">
-    <h1>🚀 SQLPad</h1>
+    <h1>🚀 DBQuery</h1>
     <p>Excel to SQLite Manager with SQL Query Interface</p>
     <article>
       <p>The frontend is not built yet. Please build it with:</p>

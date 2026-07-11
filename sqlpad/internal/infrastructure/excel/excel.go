@@ -6,7 +6,7 @@ import (
 
 	"github.com/xuri/excelize/v2"
 
-	"github.com/sqlpad/sqlpad/internal/core/models"
+	"github.com/dbquery/dbquery/internal/core/models"
 )
 
 // Parser handles Excel file parsing.

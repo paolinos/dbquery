@@ -4,7 +4,7 @@
 FE_DIR     := web
 BUILD_DIR  := build
 BE_CMD     := ./cmd/server
-BE_BIN     := sqlpad-server
+BE_BIN     := dbquery-server
 
 # ---------- Install ----------
 install: install-fe install-be ## Install all dependencies (FE + BE)

@@ -10,7 +10,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/sqlpad/sqlpad/internal/core/models"
+	"github.com/dbquery/dbquery/internal/core/models"
 )
 
 // SQLiteDB wraps a SQLite database connection.

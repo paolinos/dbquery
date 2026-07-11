@@ -1,4 +1,4 @@
-module github.com/sqlpad/sqlpad
+module github.com/dbquery/dbquery
 
 go 1.21
 

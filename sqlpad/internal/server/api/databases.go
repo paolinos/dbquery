@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/sqlpad/sqlpad/internal/infrastructure/database"
+	"github.com/dbquery/dbquery/internal/infrastructure/database"
 )
 
 // ListDatabasesHandler returns all SQLite databases in the data directory.

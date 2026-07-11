@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/sqlpad/sqlpad/internal/infrastructure/database"
-	"github.com/sqlpad/sqlpad/internal/infrastructure/excel"
+	"github.com/dbquery/dbquery/internal/infrastructure/database"
+	"github.com/dbquery/dbquery/internal/infrastructure/excel"
 )
 
 const maxUploadSize = 50 << 20 // 50MB

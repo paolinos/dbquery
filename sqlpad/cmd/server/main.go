@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	server "github.com/sqlpad/sqlpad/internal/server"
+	server "github.com/dbquery/dbquery/internal/server"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 
 	// Start server
 	addr := fmt.Sprintf(":%d", *port)
-	log.Printf("SQLPad server starting on http://localhost%s", addr)
+	log.Printf("DBQuery server starting on http://localhost%s", addr)
 	log.Printf("Data directory: %s", *dataDir)
 	log.Printf("Frontend path: %s", *frontendPath)
 

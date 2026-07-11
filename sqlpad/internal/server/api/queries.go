@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/sqlpad/sqlpad/internal/core/models"
+	"github.com/dbquery/dbquery/internal/core/models"
 )
 
 // ExecuteQueryHandler executes a SQL query against the specified database.

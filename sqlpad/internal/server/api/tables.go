@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/sqlpad/sqlpad/internal/infrastructure/database"
+	"github.com/dbquery/dbquery/internal/infrastructure/database"
 )
 
 // getDB opens a database connection for the given db name.
