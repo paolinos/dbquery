@@ -1,5 +1,6 @@
 # DBQuery — Excel to SQLite Manager
 
+
 Import Excel spreadsheets into SQLite databases and run ad‑hoc SQL queries from a clean web interface. No accounts, no setup — just upload and query.
 
 ## High‑Level Architecture
