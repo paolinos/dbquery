@@ -1,9 +1,10 @@
 .PHONY: install dev build dev-fe dev-be build-fe build-be clean help
 
 # ---------- Config ----------
-FE_DIR    := web
-BE_CMD    := ./cmd/server
-BE_BIN    := sqlpad-server
+FE_DIR     := web
+BUILD_DIR  := build
+BE_CMD     := ./cmd/server
+BE_BIN     := sqlpad-server
 
 # ---------- Install ----------
 install: install-fe install-be ## Install all dependencies (FE + BE)
@@ -47,21 +48,31 @@ dev-be: ## Start backend API server only (air or go run)
 	fi
 
 # ---------- Build ----------
-build: build-fe build-be ## Build frontend and backend
+build: build-fe build-be ## Build frontend and backend into build/
+	@echo ""
+	@echo "==> Build complete!"
+	@echo "    Binary:  $(BUILD_DIR)/$(BE_BIN)"
+	@echo "    Frontend: $(BUILD_DIR)/web/"
+	@echo ""
+	@echo "    To run:  cd $(BUILD_DIR) && ./$(BE_BIN)"
 
-build-fe: ## Build frontend for production
+build-fe: ## Build frontend for production into build/web/
 	@echo "==> Building frontend..."
 	cd $(FE_DIR) && npm run build
+	@echo "==> Copying frontend build to $(BUILD_DIR)/web/..."
+	mkdir -p $(BUILD_DIR)/web
+	cp -r $(FE_DIR)/dist/* $(BUILD_DIR)/web/
 
-build-be: ## Build backend binary
+build-be: ## Build backend binary into build/
 	@echo "==> Building backend..."
-	go build -o $(BE_BIN) $(BE_CMD)
+	mkdir -p $(BUILD_DIR)
+	go build -o $(BUILD_DIR)/$(BE_BIN) $(BE_CMD)
 
 # ---------- Clean ----------
 clean: ## Remove build artifacts
 	@echo "==> Cleaning..."
+	rm -rf $(BUILD_DIR)
 	rm -rf $(FE_DIR)/dist
-	rm -f $(BE_BIN)
 
 # ---------- Help ----------
 help: ## Show this help

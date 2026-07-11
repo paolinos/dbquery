@@ -13,7 +13,7 @@ func main() {
 	// Configuration flags
 	port := flag.Int("port", 8080, "HTTP server port")
 	dataDir := flag.String("data", "./data", "Directory for SQLite database files")
-	frontendPath := flag.String("frontend", "./web/dist", "Path to frontend build directory")
+	frontendPath := flag.String("frontend", "./web", "Path to frontend build directory")
 	flag.Parse()
 
 	// Ensure data directory exists

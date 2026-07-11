@@ -1,5 +1,6 @@
 # Binaries
 sqlpad-server
+build/
 *.exe
 *.exe~
 *.dll
