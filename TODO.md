@@ -1,7 +1,7 @@
-# SQLPad - Excel to SQLite Manager with SQL Query Interface
+# DBQuery - Excel to SQLite Manager with SQL Query Interface
 
 ## Overview
-SQLPad is a full-stack application that bridges Excel data with SQLite databases, providing a web-based SQL query interface. It allows users to upload Excel files (each sheet becomes a table in a SQLite database), browse database schemas, and execute ad-hoc SQL queries with a rich editor.
+DBQuery is a full-stack application that bridges Excel data with SQLite databases, providing a web-based SQL query interface. It allows users to upload Excel files (each sheet becomes a table in a SQLite database), browse database schemas, and execute ad-hoc SQL queries with a rich editor.
 
 ---
 
@@ -10,7 +10,7 @@ SQLPad is a full-stack application that bridges Excel data with SQLite databases
 ### Layered Structure (Clean Architecture / DDD)
 
 ```
-/app/sqlpad/
+/app/dbquery/
 ├── cmd/server/            # Application entry point
 ├── internal/
 │   ├── core/models/       # Domain entities & value objects
@@ -196,7 +196,7 @@ Simple prefix-based autocomplete:
 
 ## Database Schema (Internal)
 
-The application uses SQLite databases stored in `/app/sqlpad/data/`. Each `.db` file represents one "project" derived from an Excel upload.
+The application uses SQLite databases stored in `/app/dbquery/data/`. Each `.db` file represents one "project" derived from an Excel upload.
 
 ### Excel-to-Table Mapping
 - Excel file: `sales_report.xlsx` → Database: `sales_report.db`
