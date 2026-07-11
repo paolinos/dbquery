@@ -17,13 +17,25 @@ install-be: ## Install backend dependencies
 	go mod download
 
 # ---------- Dev ----------
-dev: dev-fe dev-be ## Run FE in watch mode and BE API server concurrently
+dev: ## Run FE and BE concurrently (Ctrl+C kills both)
+	@echo "==> Starting frontend and backend concurrently..."
+	@trap 'kill 0' INT TERM; \
+	cd $(FE_DIR) && npm run dev & \
+	if command -v air >/dev/null 2>&1; then \
+		echo "    Using air for hot-reload..."; \
+		air & \
+	else \
+		echo "    'air' not found — falling back to 'go run' (no hot-reload)."; \
+		echo "    Install air: go install github.com/air-verse/air@latest"; \
+		go run $(BE_CMD) & \
+	fi; \
+	wait
 
-dev-fe: ## Start frontend dev server (Vite, watch mode)
+dev-fe: ## Start frontend dev server only (Vite, watch mode)
 	@echo "==> Starting frontend dev server..."
 	cd $(FE_DIR) && npm run dev
 
-dev-be: ## Start backend API server (watch: requires 'air' or similar; falls back to 'go run')
+dev-be: ## Start backend API server only (air or go run)
 	@echo "==> Starting backend API server..."
 	@if command -v air >/dev/null 2>&1; then \
 		echo "    Using air for hot-reload..."; \
