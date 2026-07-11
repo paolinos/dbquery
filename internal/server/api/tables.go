@@ -10,9 +10,12 @@ import (
 	"github.com/dbquery/dbquery/internal/infrastructure/database"
 )
 
-// getDB opens a database connection for the given db name.
-func getDB(dataDir, dbName string) (*database.SQLiteDB, error) {
-	dbPath := database.GetDBPath(dataDir, dbName)
+// getDB opens a database connection for the given db name, scoped to the authenticated user.
+func getDB(dataDir string, userID int64, dbName string) (*database.SQLiteDB, error) {
+	dbPath, err := database.ResolveUserDBPath(dataDir, userID, dbName)
+	if err != nil {
+		return nil, err
+	}
 	return database.OpenExisting(dbPath)
 }
 
@@ -25,7 +28,8 @@ func ListTablesHandler(dataDir string) gin.HandlerFunc {
 			return
 		}
 
-		db, err := getDB(dataDir, dbName)
+		userID := c.GetInt64("userID")
+		db, err := getDB(dataDir, userID, dbName)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   "Database not found",
@@ -62,7 +66,8 @@ func GetTableSchemaHandler(dataDir string) gin.HandlerFunc {
 			return
 		}
 
-		db, err := getDB(dataDir, dbName)
+		userID := c.GetInt64("userID")
+		db, err := getDB(dataDir, userID, dbName)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   "Database not found",
@@ -134,7 +139,8 @@ func GetTableDataHandler(dataDir string) gin.HandlerFunc {
 		offset := (page - 1) * perPage
 		query := fmt.Sprintf("SELECT * FROM [%s] LIMIT %d OFFSET %d", tableName, perPage, offset)
 
-		db, err := getDB(dataDir, dbName)
+		userID := c.GetInt64("userID")
+		db, err := getDB(dataDir, userID, dbName)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   "Database not found",

@@ -2,15 +2,32 @@
 const API_BASE = 'http://localhost:8080/api'
 
 /**
+ * Get the stored auth token from localStorage.
+ */
+function getAuthToken() {
+  return localStorage.getItem('auth_token')
+}
+
+/**
  * Generic fetch wrapper with error handling.
+ * Automatically attaches the Authorization header if a token is stored.
  */
 async function request(url, options = {}) {
+  const token = getAuthToken()
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  }
+
+  // Attach JWT token if available
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
     ...options,
+    headers,
   }
 
   // Remove Content-Type for FormData
@@ -19,6 +36,16 @@ async function request(url, options = {}) {
   }
 
   const response = await fetch(`${API_BASE}${url}`, config)
+
+  // If 401, clear stored auth and redirect
+  if (response.status === 401) {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('auth_username')
+    // Dispatch a custom event so the app can react
+    window.dispatchEvent(new CustomEvent('auth-expired'))
+    throw new Error('Session expired. Please log in again.')
+  }
+
   const data = await response.json()
 
   if (!response.ok) {
@@ -27,6 +54,60 @@ async function request(url, options = {}) {
 
   return data
 }
+
+// ─── Auth API ──────────────────────────────────────────────
+
+/**
+ * Check if any users exist in the system.
+ * @returns {Promise<{data: {has_users: boolean}}>}
+ */
+export function hasUsers() {
+  return request('/auth/has-users')
+}
+
+/**
+ * Login with username and password.
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<{data: {token: string, username: string}}>}
+ */
+export function login(username, password) {
+  return request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  })
+}
+
+/**
+ * Register a new user (only works when no users exist).
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<{data: {token: string, username: string}}>}
+ */
+export function register(username, password) {
+  return request('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  })
+}
+
+/**
+ * Logout — revokes the current token server-side.
+ * @returns {Promise<{message: string}>}
+ */
+export function logout() {
+  return request('/auth/logout', { method: 'POST' })
+}
+
+/**
+ * Get current user info from the server.
+ * @returns {Promise<{data: {user_id: number, username: string}}>}
+ */
+export function getMe() {
+  return request('/auth/me')
+}
+
+// ─── Database API ──────────────────────────────────────────
 
 /**
  * Health check — returns server version, status, and timestamp.

@@ -1,80 +1,90 @@
 <template>
   <div class="app-layout">
-    <!-- Header -->
-    <DatabaseHeader
-      v-model="currentDatabase"
-      :loading="loadingDatabases"
-      :uploading="false"
-      @upload="triggerUpload"
-      @refresh="refreshAll"
-      @database-imported="onDatabaseImported"
-      ref="headerRef"
-    />
+    <!-- Login view when not authenticated -->
+    <LoginView v-if="!authenticated" @auth-success="onAuthSuccess" />
 
-    <!-- Main content area -->
-    <div class="main-content">
-      <!-- Left panel: Tables -->
-      <div class="left-panel" :class="{ collapsed: !currentDatabase }">
-        <TablePanel
-          :tables="tables"
-          :selected-table="selectedTable"
-          :loading="loadingTables"
-          @select-table="onSelectTable"
-          @preview-table="onPreviewTable"
-          @refresh="loadTables"
-        />
-      </div>
+    <!-- Main app when authenticated -->
+    <template v-else>
+      <!-- Header -->
+      <DatabaseHeader
+        v-model="currentDatabase"
+        :loading="loadingDatabases"
+        :uploading="false"
+        :username="username"
+        @upload="triggerUpload"
+        @refresh="refreshAll"
+        @database-imported="onDatabaseImported"
+        @logout="onLogout"
+        ref="headerRef"
+      />
 
-      <!-- Right panel: Editor + Results -->
-      <div class="right-panel">
-        <!-- Editor section -->
-        <div class="editor-section" :style="{ flex: editorFlex }">
-          <SqlEditor
-            :database="currentDatabase"
-            :running="queryRunning"
-            @run-query="onRunQuery"
-            ref="editorRef"
+      <!-- Main content area -->
+      <div class="main-content">
+        <!-- Left panel: Tables -->
+        <div class="left-panel" :class="{ collapsed: !currentDatabase }">
+          <TablePanel
+            :tables="tables"
+            :selected-table="selectedTable"
+            :loading="loadingTables"
+            @select-table="onSelectTable"
+            @preview-table="onPreviewTable"
+            @refresh="loadTables"
           />
         </div>
 
-        <!-- Resize handle -->
-        <div
-          class="resize-handle"
-          @mousedown="startResize"
-        ></div>
+        <!-- Right panel: Editor + Results -->
+        <div class="right-panel">
+          <!-- Editor section -->
+          <div class="editor-section" :style="{ flex: editorFlex }">
+            <SqlEditor
+              :database="currentDatabase"
+              :running="queryRunning"
+              @run-query="onRunQuery"
+              ref="editorRef"
+            />
+          </div>
 
-        <!-- Results section -->
-        <div class="results-section" :style="{ flex: resultsFlex }">
-          <ResultsTable
-            :result="queryResult"
-            :error="queryError"
-            :loading="queryRunning"
-          />
+          <!-- Resize handle -->
+          <div
+            class="resize-handle"
+            @mousedown="startResize"
+          ></div>
+
+          <!-- Results section -->
+          <div class="results-section" :style="{ flex: resultsFlex }">
+            <ResultsTable
+              :result="queryResult"
+              :error="queryError"
+              :loading="queryRunning"
+            />
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Hidden file input for upload -->
-    <input
-      ref="fileInput"
-      type="file"
-      accept=".xlsx,.xlsm,.xltx,.xltm"
-      style="display: none"
-      @change="onFileSelected"
-    />
+      <!-- Hidden file input for upload -->
+      <input
+        ref="fileInput"
+        type="file"
+        accept=".xlsx,.xlsm,.xltx,.xltm"
+        style="display: none"
+        @change="onFileSelected"
+      />
+    </template>
   </div>
 </template>
 
 <script>
+import LoginView from './components/Login.vue'
 import DatabaseHeader from './components/DatabaseHeader.vue'
 import TablePanel from './components/TablePanel.vue'
 import SqlEditor from './components/SqlEditor.vue'
 import ResultsTable from './components/ResultsTable.vue'
-import { listDatabases, listTables, executeQuery, getTableData, uploadExcel } from './api.js'
+import { listDatabases, listTables, executeQuery, getTableData, uploadExcel, getMe, logout } from './api.js'
 
 export default {
   name: 'App',
   components: {
+    LoginView,
     DatabaseHeader,
     TablePanel,
     SqlEditor,
@@ -82,6 +92,10 @@ export default {
   },
   data() {
     return {
+      // Auth state
+      authenticated: false,
+      username: '',
+
       // Database state
       currentDatabase: '',
       databases: [],
@@ -105,10 +119,68 @@ export default {
     }
   },
   async mounted() {
-    // Load databases on mount
-    await this.loadDatabases()
+    // Listen for auth expiry events from the API layer
+    window.addEventListener('auth-expired', this.onAuthExpired)
+
+    // Check if user has a stored token and validate it
+    await this.checkAuth()
+  },
+  beforeUnmount() {
+    window.removeEventListener('auth-expired', this.onAuthExpired)
   },
   methods: {
+    async checkAuth() {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        this.authenticated = false
+        return
+      }
+
+      try {
+        const result = await getMe()
+        this.username = result.data?.username || ''
+        this.authenticated = true
+        await this.loadDatabases()
+      } catch (err) {
+        // Token is invalid or expired
+        this.authenticated = false
+        this.username = ''
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth_username')
+      }
+    },
+
+    onAuthSuccess({ token, username }) {
+      this.authenticated = true
+      this.username = username
+      this.loadDatabases()
+    },
+
+    onAuthExpired() {
+      this.authenticated = false
+      this.username = ''
+      this.currentDatabase = ''
+      this.databases = []
+      this.tables = []
+      this.queryResult = null
+    },
+
+    async onLogout() {
+      try {
+        await logout()
+      } catch (err) {
+        // Ignore logout errors — clear locally regardless
+      }
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_username')
+      this.authenticated = false
+      this.username = ''
+      this.currentDatabase = ''
+      this.databases = []
+      this.tables = []
+      this.queryResult = null
+    },
+
     async loadDatabases() {
       this.loadingDatabases = true
       try {

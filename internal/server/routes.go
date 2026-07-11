@@ -7,12 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/dbquery/dbquery/internal/infrastructure/database"
 	"github.com/dbquery/dbquery/internal/server/api"
 	"github.com/dbquery/dbquery/internal/server/middleware"
 )
 
 // SetupRouter creates and configures the Gin router with all routes.
-func SetupRouter(dataDir string, frontendPath string, _ bool) *gin.Engine {
+func SetupRouter(dataDir string, frontendPath string, authDB *database.AuthDB) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
@@ -21,33 +22,52 @@ func SetupRouter(dataDir string, frontendPath string, _ bool) *gin.Engine {
 	// CORS middleware
 	r.Use(middleware.SetupCORS())
 
-	// API routes
-	apiGroup := r.Group("/api")
+	// Public API routes (no auth required)
+	publicGroup := r.Group("/api")
 	{
-
 		// Health check
-		apiGroup.GET("/health", api.HealthHandler())
+		publicGroup.GET("/health", api.HealthHandler())
 
-		// List all databases
-		apiGroup.GET("/databases", api.ListDatabasesHandler(dataDir))
+		// Check if any users exist (for first-time setup)
+		publicGroup.GET("/auth/has-users", api.HasUsersHandler(authDB))
+
+		// Register first user (only when no users exist)
+		publicGroup.POST("/auth/register", api.RegisterHandler(authDB))
+
+		// Login
+		publicGroup.POST("/auth/login", api.LoginHandler(authDB))
+	}
+
+	// Protected API routes (auth required)
+	protectedGroup := r.Group("/api")
+	protectedGroup.Use(middleware.AuthMiddleware(authDB))
+	{
+		// List all databases (filtered by user)
+		protectedGroup.GET("/databases", api.ListDatabasesHandler(dataDir))
 
 		// List tables in a database
-		apiGroup.GET("/databases/:db/tables", api.ListTablesHandler(dataDir))
+		protectedGroup.GET("/databases/:db/tables", api.ListTablesHandler(dataDir))
 
 		// Get table schema
-		apiGroup.GET("/databases/:db/tables/:table/schema", api.GetTableSchemaHandler(dataDir))
+		protectedGroup.GET("/databases/:db/tables/:table/schema", api.GetTableSchemaHandler(dataDir))
 
 		// Get table data (paginated)
-		apiGroup.GET("/databases/:db/tables/:table/data", api.GetTableDataHandler(dataDir))
+		protectedGroup.GET("/databases/:db/tables/:table/data", api.GetTableDataHandler(dataDir))
 
 		// Execute SQL query
-		apiGroup.POST("/databases/:db/query", api.ExecuteQueryHandler(dataDir))
+		protectedGroup.POST("/databases/:db/query", api.ExecuteQueryHandler(dataDir))
 
 		// Get autocomplete suggestions
-		apiGroup.GET("/databases/:db/autocomplete", api.GetTableAutocompleteHandler(dataDir))
+		protectedGroup.GET("/databases/:db/autocomplete", api.GetTableAutocompleteHandler(dataDir))
 
 		// Upload Excel file
-		apiGroup.POST("/upload", api.UploadExcelHandler(dataDir))
+		protectedGroup.POST("/upload", api.UploadExcelHandler(dataDir))
+
+		// Auth: logout
+		protectedGroup.POST("/auth/logout", api.LogoutHandler(authDB))
+
+		// Auth: current user info
+		protectedGroup.GET("/auth/me", api.MeHandler(authDB))
 	}
 
 	// Serve frontend static files
@@ -93,6 +113,7 @@ func serveFrontend(r *gin.Engine, frontendPath string) {
       <p>Then restart the server.</p>
       <p>In the meantime, you can use the API directly:</p>
       <ul style="text-align: left;">
+        <li><code>POST /api/auth/login</code> — Login</li>
         <li><code>GET /api/databases</code> — List databases</li>
         <li><code>GET /api/databases/:db/tables</code> — List tables</li>
         <li><code>POST /api/databases/:db/query</code> — Execute SQL</li>
