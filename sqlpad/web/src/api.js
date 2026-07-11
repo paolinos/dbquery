@@ -29,6 +29,14 @@ async function request(url, options = {}) {
 }
 
 /**
+ * Health check — returns server version, status, and timestamp.
+ * @returns {Promise<{version: string, status: string, timestamp: string}>}
+ */
+export function healthCheck() {
+  return request('/health')
+}
+
+/**
  * List all databases.
  * @returns {Promise<{data: Array, message: string}>}
  */

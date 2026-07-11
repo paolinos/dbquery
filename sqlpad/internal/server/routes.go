@@ -24,6 +24,10 @@ func SetupRouter(dataDir string, frontendPath string, _ bool) *gin.Engine {
 	// API routes
 	apiGroup := r.Group("/api")
 	{
+
+		// Health check
+		apiGroup.GET("/health", api.HealthHandler())
+
 		// List all databases
 		apiGroup.GET("/databases", api.ListDatabasesHandler(dataDir))
 

@@ -3,7 +3,14 @@
     <div class="header-content">
       <div class="brand">
         <span class="brand-icon">📊</span>
-        <h1 class="brand-title">SQLPad</h1>
+        <h1 class="brand-title">DBQuery</h1>
+        <span class="brand-version">v{{ healthInfo.version }}</span>
+        <span
+          class="status-dot"
+          :class="statusClass"
+          :title="'Status: ' + healthInfo.status"
+          @click="refreshHealth"
+        ></span>
       </div>
 
       <div class="header-controls">
@@ -62,7 +69,7 @@
 </template>
 
 <script>
-import { listDatabases, uploadExcel } from '../api.js'
+import { listDatabases, uploadExcel, healthCheck } from '../api.js'
 
 export default {
   name: 'DatabaseHeader',
@@ -75,12 +82,33 @@ export default {
     return {
       databases: [],
       uploading: false,
+      healthInfo: { version: '?', status: 'unknown' },
+      healthLoading: false,
     }
   },
+  computed: {
+    statusClass() {
+      if (this.healthLoading) return 'status-yellow'
+      if (this.healthInfo.status === 'ok') return 'status-green'
+      return 'status-red'
+    },
+  },
   async mounted() {
+    await this.refreshHealth()
     await this.loadDatabases()
   },
   methods: {
+    async refreshHealth() {
+      this.healthLoading = true
+      try {
+        const result = await healthCheck()
+        this.healthInfo = result
+      } catch (err) {
+        this.healthInfo = { version: this.healthInfo.version || '?', status: 'error' }
+      } finally {
+        this.healthLoading = false
+      }
+    },
     async loadDatabases() {
       try {
         const result = await listDatabases()
@@ -169,6 +197,37 @@ export default {
   font-weight: 700;
   margin: 0;
   color: var(--pico-primary);
+}
+
+.brand-version {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--pico-muted-color);
+  opacity: 0.7;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.status-green {
+  background-color: #22c55e;
+  box-shadow: 0 0 4px #22c55e66;
+}
+
+.status-red {
+  background-color: #ef4444;
+  box-shadow: 0 0 4px #ef444466;
+}
+
+.status-yellow {
+  background-color: #eab308;
+  box-shadow: 0 0 4px #eab30866;
 }
 
 .header-controls {
