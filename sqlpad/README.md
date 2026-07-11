@@ -53,26 +53,45 @@ Import Excel spreadsheets into SQLite databases and run ad‑hoc SQL queries fro
 
 - **Go** ≥1.21
 - **Node.js** ≥18 (for building the frontend)
+- **Make** (optional, but recommended)
 
-### 1. Build the Frontend
-
-```bash
-cd web
-npm install
-npm run build
-```
-
-### 2. Start the Server
+### 1. Install Dependencies
 
 ```bash
-# From the project root (sqlpad/)
-go build -o sqlpad-server ./cmd/server/
-./sqlpad-server --port 8080
+make install
 ```
 
-### 3. Open the Browser
+### 2. Run in Development Mode
 
-Navigate to **[http://localhost:8080](http://localhost:8080)**
+Starts the Vite dev server (`:5173`) and Go backend (`:8080`) concurrently with hot-reload:
+
+```bash
+make dev
+```
+
+Open **[http://localhost:5173](http://localhost:5173)** — Vite proxies `/api` requests to the backend.
+
+### 3. Build for Production
+
+```bash
+make build
+```
+
+This produces a self-contained `build/` directory:
+
+```
+build/
+  sqlpad-server    # Go binary
+  web/             # Frontend SPA (index.html, assets/)
+```
+
+Run the production build:
+
+```bash
+cd build && ./sqlpad-server
+```
+
+Open **[http://localhost:8080](http://localhost:8080)**
 
 ## Usage
 
@@ -147,7 +166,7 @@ Response:
 |------|---------|-------------|
 | `--port` | `8080` | HTTP server port |
 | `--data` | `./data` | Directory for SQLite database files |
-| `--frontend` | `./web/dist` | Path to the built frontend directory |
+| `--frontend` | `./web` | Path to the built frontend directory |
 
 ## Project Layout
 
@@ -160,11 +179,31 @@ sqlpad/
 │   └── server/              # HTTP transport layer
 ├── web/                     # Vue.js SPA
 │   ├── src/components/      # Vue components
-│   └── dist/                # Production build
+│   └── dist/                # Vite build output (intermediate)
+├── build/                   # Production build output (gitignored)
+│   ├── sqlpad-server        # Go binary
+│   └── web/                 # Frontend SPA for serving
 ├── data/                    # SQLite database storage
+├── Makefile                 # Build & dev automation
 ├── TODO.md                  # Full architecture document
 └── README.md
 ```
+
+## Makefile Reference
+
+| Command | Description |
+|---------|-------------|
+| `make install` | Install all dependencies (FE + BE) |
+| `make install-fe` | Install frontend dependencies only |
+| `make install-be` | Install backend dependencies only |
+| `make dev` | Run FE and BE concurrently (Ctrl+C kills both) |
+| `make dev-fe` | Start Vite dev server only (`:5173`) |
+| `make dev-be` | Start Go backend only (`:8080`, uses `air` if available) |
+| `make build` | Build FE and BE into `build/` |
+| `make build-fe` | Build frontend for production → `build/web/` |
+| `make build-be` | Build backend binary → `build/sqlpad-server` |
+| `make clean` | Remove all build artifacts |
+| `make help` | Show available targets |
 
 ## Tech Stack
 
