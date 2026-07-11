@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/dbquery/dbquery/internal/infrastructure/database"
 	server "github.com/dbquery/dbquery/internal/server"
 )
 
@@ -21,8 +22,15 @@ func main() {
 		log.Fatalf("Failed to create data directory %s: %v", *dataDir, err)
 	}
 
+	// Initialize auth database (_auth.db)
+	authDB, err := database.EnsureAuthDB(*dataDir)
+	if err != nil {
+		log.Fatalf("Failed to initialize auth database: %v", err)
+	}
+	defer authDB.Close()
+
 	// Setup router
-	router := server.SetupRouter(*dataDir, *frontendPath, false)
+	router := server.SetupRouter(*dataDir, *frontendPath, authDB)
 
 	// Start server
 	addr := fmt.Sprintf(":%d", *port)

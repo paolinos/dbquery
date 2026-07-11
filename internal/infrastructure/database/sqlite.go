@@ -48,8 +48,59 @@ func (s *SQLiteDB) GetDB() *sql.DB {
 	return s.db
 }
 
-// ListDatabases returns all .db files in the given directory.
-func ListDatabases(dataDir string) ([]models.DatabaseInfo, error) {
+// ListDatabases returns all .db files in the given directory that belong to the specified user.
+// Files are prefixed with "{userID}_" to isolate per-user data.
+// The _auth.db file is always excluded.
+func ListDatabases(dataDir string, userID int64) ([]models.DatabaseInfo, error) {
+	entries, err := os.ReadDir(dataDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []models.DatabaseInfo{}, nil
+		}
+		return nil, fmt.Errorf("failed to read data directory %s: %w", dataDir, err)
+	}
+
+	// Build the user prefix: "1_" for userID 1
+	userPrefix := fmt.Sprintf("%d_", userID)
+
+	var databases = []models.DatabaseInfo{}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !strings.HasSuffix(name, ".db") {
+			continue
+		}
+		// Always exclude the auth database
+		if name == "_auth.db" {
+			continue
+		}
+		// Only include databases belonging to this user
+		if !strings.HasPrefix(name, userPrefix) {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		// Strip the user prefix from the display name
+		dbName := strings.TrimPrefix(name, userPrefix)
+		dbName = strings.TrimSuffix(dbName, ".db")
+		databases = append(databases, models.DatabaseInfo{
+			Name: dbName,
+			Path: filepath.Join(dataDir, name),
+			Size: info.Size(),
+		})
+	}
+
+	return databases, nil
+}
+
+// ListDatabasesRaw returns all .db files in the given directory (no user filtering).
+// Used internally for operations that need the real filename on disk.
+func ListDatabasesRaw(dataDir string) ([]models.DatabaseInfo, error) {
 	entries, err := os.ReadDir(dataDir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -63,21 +114,43 @@ func ListDatabases(dataDir string) ([]models.DatabaseInfo, error) {
 		if entry.IsDir() {
 			continue
 		}
-		if strings.HasSuffix(entry.Name(), ".db") {
+		name := entry.Name()
+		if strings.HasSuffix(name, ".db") && name != "_auth.db" {
 			info, err := entry.Info()
 			if err != nil {
 				continue
 			}
-			name := strings.TrimSuffix(entry.Name(), ".db")
 			databases = append(databases, models.DatabaseInfo{
-				Name: name,
-				Path: filepath.Join(dataDir, entry.Name()),
+				Name: strings.TrimSuffix(name, ".db"),
+				Path: filepath.Join(dataDir, name),
 				Size: info.Size(),
 			})
 		}
 	}
 
 	return databases, nil
+}
+
+// GetUserDBPath returns the file path for a user-scoped database.
+// The filename is prefixed with "{userID}_" to isolate per-user data.
+func GetUserDBPath(dataDir string, userID int64, dbName string) string {
+	dbName = filepath.Clean(dbName)
+	dbName = strings.ReplaceAll(dbName, "..", "")
+	dbName = strings.ReplaceAll(dbName, "/", "")
+	dbName = strings.ReplaceAll(dbName, "\\", "")
+	prefixed := fmt.Sprintf("%d_%s", userID, dbName)
+	return filepath.Join(dataDir, prefixed+".db")
+}
+
+// ResolveUserDBPath resolves a user-facing database name to the actual file path on disk.
+// It searches for "{userID}_{dbName}.db" in the data directory.
+func ResolveUserDBPath(dataDir string, userID int64, dbName string) (string, error) {
+	prefixed := fmt.Sprintf("%d_%s", userID, dbName)
+	path := filepath.Join(dataDir, prefixed+".db")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return "", fmt.Errorf("database not found: %s", dbName)
+	}
+	return path, nil
 }
 
 // GetTables returns all tables in the database.

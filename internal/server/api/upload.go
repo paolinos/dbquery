@@ -17,8 +17,11 @@ import (
 const maxUploadSize = 50 << 20 // 50MB
 
 // UploadExcelHandler handles Excel file upload and imports data into SQLite.
+// The resulting database file is prefixed with the user's ID for isolation.
 func UploadExcelHandler(dataDir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID := c.GetInt64("userID")
+
 		// Limit upload size
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxUploadSize)
 
@@ -70,7 +73,8 @@ func UploadExcelHandler(dataDir string) gin.HandlerFunc {
 			dbName = "imported"
 		}
 
-		dbPath := database.GetDBPath(dataDir, dbName)
+		// Get user-scoped database path
+		dbPath := database.GetUserDBPath(dataDir, userID, dbName)
 
 		// Ensure data directory exists
 		if err := os.MkdirAll(dataDir, 0755); err != nil {

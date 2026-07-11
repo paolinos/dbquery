@@ -54,8 +54,44 @@
         >
           🔄
         </button>
+
+        <!-- User menu -->
+        <div class="user-menu" v-if="username">
+          <button
+            class="user-btn"
+            @click="toggleUserMenu"
+            :aria-expanded="showUserMenu"
+          >
+            <span class="user-avatar">👤</span>
+            <span class="user-name">{{ username }}</span>
+          </button>
+
+          <!-- Dropdown panel -->
+          <div
+            class="user-dropdown"
+            v-if="showUserMenu"
+          >
+            <div class="dropdown-header">
+              <span class="dropdown-username">{{ username }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button
+              class="dropdown-item logout-item"
+              @click="handleLogout"
+            >
+              🚪 Logout
+            </button>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Click outside handler to close dropdown -->
+    <div
+      v-if="showUserMenu"
+      class="dropdown-backdrop"
+      @click="showUserMenu = false"
+    ></div>
 
     <!-- Upload input (hidden) -->
     <input
@@ -76,14 +112,16 @@ export default {
   props: {
     modelValue: { type: String, default: '' },
     loading: { type: Boolean, default: false },
+    username: { type: String, default: '' },
   },
-  emits: ['update:modelValue', 'upload', 'refresh', 'database-imported'],
+  emits: ['update:modelValue', 'upload', 'refresh', 'database-imported', 'logout'],
   data() {
     return {
       databases: [],
       uploading: false,
       healthInfo: { version: '?', status: 'unknown' },
       healthLoading: false,
+      showUserMenu: false,
     }
   },
   computed: {
@@ -154,6 +192,13 @@ export default {
     },
     triggerUpload() {
       this.$refs.fileInput?.click()
+    },
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu
+    },
+    handleLogout() {
+      this.showUserMenu = false
+      this.$emit('logout')
     },
   },
 }
@@ -236,7 +281,7 @@ export default {
   gap: 0.75rem;
   flex: 1;
   justify-content: flex-end;
-  max-width: 600px;
+  max-width: 700px;
 }
 
 .db-selector {
@@ -278,5 +323,108 @@ export default {
   clip: rect(0,0,0,0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ─── User Menu ─────────────────────────────────────────── */
+
+.user-menu {
+  position: relative;
+}
+
+.user-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.875rem;
+  margin-bottom: 0;
+  background: transparent;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  color: var(--pico-font-color);
+}
+
+.user-btn:hover {
+  background: var(--pico-card-background-color);
+  border-color: var(--pico-primary);
+}
+
+.user-avatar {
+  font-size: 1.1rem;
+}
+
+.user-name {
+  font-weight: 600;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  padding: 0.75rem 1rem;
+}
+
+.dropdown-username {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--pico-font-color);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--pico-muted-border-color);
+  margin: 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--pico-font-color);
+  transition: background 0.12s;
+}
+
+.dropdown-item:hover {
+  background: var(--pico-secondary-focus);
+}
+
+.logout-item {
+  color: #dc2626;
+}
+
+.logout-item:hover {
+  background: #fef2f2;
+}
+
+.dropdown-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
 }
 </style>

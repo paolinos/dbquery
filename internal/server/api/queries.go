@@ -50,7 +50,8 @@ func ExecuteQueryHandler(dataDir string) gin.HandlerFunc {
 		// Remove trailing semicolons for consistency
 		query = strings.TrimRight(query, "; \t\n\r")
 
-		db, err := getDB(dataDir, dbName)
+		userID := c.GetInt64("userID")
+		db, err := getDB(dataDir, userID, dbName)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   "Database not found",
@@ -88,7 +89,8 @@ func GetTableAutocompleteHandler(dataDir string) gin.HandlerFunc {
 			return
 		}
 
-		db, err := getDB(dataDir, dbName)
+		userID := c.GetInt64("userID")
+		db, err := getDB(dataDir, userID, dbName)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   "Database not found",
